@@ -5,10 +5,27 @@ import { nextCookies } from "better-auth/next-js";
 import { schema } from "@/db/schema";
 import { Resend } from "resend";
 import ForgotPasswordEmail from "@/components/emails/reset-password";
+import VerifyEmailAddress from "@/components/emails/verify-email";
 
 const resend = new Resend(process.env.RESEND_API_KEY!);
 
 export const auth = betterAuth({
+  emailVerification: {
+    sendVerificationEmail: async ({ user, url }) => {
+      resend.emails.send({
+        from: "Auracare AI <auracareai@resend.dev>",
+        to: user.email,
+        subject: "Verify your email address",
+        react: VerifyEmailAddress({
+          username: user.name,
+          verifyUrl: url,
+        }),
+      });
+    },
+
+    sendOnSignUp: true,
+  },
+
   socialProviders: {
     google: {
       clientId: process.env.GOOGLE_CLIENT_ID as string,
@@ -21,7 +38,7 @@ export const auth = betterAuth({
     sendResetPassword: async ({ user, url }) => {
       console.log("Reset URL:", url);
       resend.emails.send({
-        from: "Auracare AI <onboarding@resend.dev>",
+        from: "Auracare AI <auracareai@resend.dev>",
         to: user.email,
         subject: "Reset your password",
         react: ForgotPasswordEmail({
